@@ -1,0 +1,64 @@
+def jooqOut = "$buildDir/jooq"
+def writer = new StringWriter()
+
+def xml = "$projectDir/jooq-config.xml"
+def dbDdl = "$projectDir/src/test/resources/database.ddl"
+
+configurations { jooq }
+
+dependencies {
+    jooq 'org.jooq:jooq-codegen:3.6.4'
+    jooq 'mysql:mysql-connector-java:5.1.17'
+
+    compile 'org.jooq:jooq:3.6.4'
+}
+
+task generateDB() << {
+    println "Generate jooq classes into $jooqOut using $dbDdl"
+
+    def url = 'jdbc:h2:mem:testdb'
+    def driver = 'org.h2.Driver'
+    def username = 'sa'
+    def password = ''
+    
+    def initdb = new File('initdb.sql')
+    initdb.text ="""
+DROP DATABASE IF EXISTS jooq_gen;
+CREATE DATABASE jooq_gen;
+USE jooq_gen;
+${new File(dbDdl).text}
+"""
+
+    /* WARN: $dbDdl uses DELIMITER mysql sql statement, 
+     * that isn't supported by ant sql. 
+     * So it fails executing these queries!!
+     * */
+    ant.sql(classpath: configurations.jooq.asPath, encoding: "UTF-8",
+        driver: driver, url: url,
+        userid: username, password: password,
+        onerror: 'continue'
+        ) { fileset(file: initdb) }
+
+    initdb.delete()
+}
+
+task jooq(type: JavaExec) {
+    description "Generate jooq classes into $jooqOut"
+
+    classpath = configurations.jooq
+
+    main = 'org.jooq.util.GenerationTool'
+    args xml
+
+    dependsOn(generateDB)
+    outputs.dir jooqOut
+    outputs.upToDateWhen { return false }
+}
+
+task cleanJooq(type: Delete) {
+    description "Clean generated jooq classes"
+    delete jooqOut
+}
+
+sourceSets.main.java.srcDir jooqOut
+

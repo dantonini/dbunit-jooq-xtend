@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<configuration xmlns="http://www.jooq.org/xsd/jooq-codegen-3.6.0.xsd">
+	<!-- Configure the database connection here -->
+	<jdbc>
+        <driver>org.h2.Driver</driver>
+        <url>jdbc:h2:~/test</url>
+        <user>sa</user>
+        <password></password>
+    </jdbc>
+	<generator>
+		<database>
+			<name>org.jooq.util.h2.H2Database</name>
+			<includes>.*</includes>
+			<excludes></excludes>
+			<inputSchema>PUBLIC</inputSchema>
+		</database>
+		<generate>
+			<records>true</records>
+			<relations>false</relations>
+			<deprecated>false</deprecated>
+			<daos>false</daos>
+			<pojos>false</pojos>
+			<immutablePojos>false</immutablePojos>
+			<fluentSetters>false</fluentSetters>
+		</generate>
+		<target>
+			<packageName>org.example.dbunit.jooq.xtend</packageName>
+			<directory>build/jooq</directory>
+		</target>
+	</generator>
+</configuration>
